@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数组转二叉树 可视化</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft Yahei", sans-serif;
+        }
+        body {
+            background-color: #f5f7fa;
+            padding: 30px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2d3436;
+            margin-bottom: 20px;
+        }
+        .info {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        /* 二叉树画布区域 */
+        #treeContainer {
+            position: relative;
+            min-height: 450px;
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 40px;
+        }
+        /* 节点样式 */
+        .tree-node {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #0984e3;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+        /* 连接线 */
+        .line {
+            position: absolute;
+            background-color: #636e72;
+            height: 2px;
+            transform-origin: left center;
+            z-index: 1;
+        }
+        .tip-text {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #636e72;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>数组转链表二叉树 可视化</h1>
+        <div class="info">
+            <strong>原始数组：</strong>[10, 5, 15, 3, 7, null, 20]<br>
+            <strong>构建规则：</strong>层序遍历构建完全二叉树，null 代表空节点，无对应子节点
+        </div>
+
+        <div id="treeContainer"></div>
+        <div class="tip-text">树形结构示意图</div>
+    </div>
+
+    <script>
+        // 1. 二叉树节点类
+        class TreeNode {
+            constructor(val) {
+                this.val = val;
+                this.left = null;
+                this.right = null;
+            }
+        }
+
+        // 2. 数组转二叉树（层序构建）
+        function arrayToTree(arr) {
+            if (!arr || arr.length === 0) return null;
+            const root = new TreeNode(arr[0]);
+            const queue = [root];
+            let index = 1;
+
+            while (queue.length > 0 && index < arr.length) {
+                const curr = queue.shift();
+                // 左子节点
+                if (arr[index] !== null) {
+                    curr.left = new TreeNode(arr[index]);
+                    queue.push(curr.left);
+                }
+                index++;
+                // 右子节点
+                if (index < arr.length && arr[index] !== null) {
+                    curr.right = new TreeNode(arr[index]);
+                    queue.push(curr.right);
+                }
+                index++;
+            }
+            return root;
+        }
+
+        // 3. 绘制二叉树（计算坐标 + 节点 + 连线）
+        function drawTree(root) {
+            const container = document.getElementById('treeContainer');
+            container.innerHTML = '';
+            if (!root) return;
+
+            // 层级间距、节点水平间距
+            const levelHeight = 120;
+            const baseX = container.clientWidth / 2;
+            const startY = 20;
+            // 每层左右偏移量
+            let offset = baseX / 2.2;
+
+            const queue = [{ node: root, x: baseX, y: startY, level: 0 }];
+
+            while (queue.length > 0) {
+                const { node, x, y, level } = queue.shift();
+
+                // 创建节点DOM
+                const nodeDom = document.createElement('div');
+                nodeDom.className = 'tree-node';
+                nodeDom.innerText = node.val;
+                nodeDom.style.left = `${x - 30}px`;
+                nodeDom.style.top = `${y}px`;
+                container.appendChild(nodeDom);
+
+                const nextOffset = offset / 2;
+                const nextY = y + levelHeight;
+
+                // 绘制左子节点 & 连线
+                if (node.left) {
+                    const leftX = x - offset;
+                    // 连接线
+                    createLine(x, y + 30, leftX, nextY + 30, container);
+                    queue.push({ node: node.left, x: leftX, y: nextY, level: level + 1 });
+                }
+
+                // 绘制右子节点 & 连线
+                if (node.right) {
+                    const rightX = x + offset;
+                    // 连接线
+                    createLine(x, y + 30, rightX, nextY + 30, container);
+                    queue.push({ node: node.right, x: rightX, y: nextY, level: level + 1 });
+                }
+                offset = nextOffset;
+            }
+        }
+
+        // 创建两点之间的斜线
+        function createLine(x1, y1, x2, y2, parent) {
+            const line = document.createElement('div');
+            line.className = 'line';
+            const length = Math.hypot(x2 - x1, y2 - y1);
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+
+            line.style.width = `${length}px`;
+            line.style.left = `${x1}px`;
+            line.style.top = `${y1}px`;
+            line.style.transform = `rotate(${angle}deg)`;
+            parent.appendChild(line);
+        }
+
+        // 主程序执行
+        const arr = [10, 5, 15, 3, 7, null, 20];
+        const treeRoot = arrayToTree(arr);
+        drawTree(treeRoot);
+
+        // 窗口大小改变时重绘
+        window.addEventListener('resize', () => {
+            drawTree(treeRoot);
+        });
+    </script>
+</body>
+</html>
