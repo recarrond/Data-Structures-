@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>3阶B树构造演示[10,20,5,6,12,30,25]</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:微软雅黑}
+        body{background:#f2f7ff;padding:25px}
+        .box{max-width:1200px;margin:0 auto;background:#fff;padding:20px;border-radius:10px}
+        .ctrl{display:flex;gap:15px;justify-content:center;margin-bottom:15px}
+        button{padding:7px 20px;background:#2979ff;color:#fff;border:none;border-radius:5px;cursor:pointer}
+        #info{padding:10px;background:#e8f1ff;border-radius:6px;margin-bottom:15px;min-height:50px}
+        #tree{position:relative;min-height:380px;padding-top:30px}
+        .node{position:absolute;padding:6px 12px;border:2px solid #2979ff;border-radius:5px;background:#fff;z-index:2}
+        .line{position:absolute;height:2px;background:#555;transform-origin:left center;z-index:1}
+    </style>
+</head>
+<body>
+<div class="box">
+    <h2 style="text-align:center;margin-bottom:10px">3阶B树分步插入演示</h2>
+    <div class="ctrl">
+        <button id="next">下一步插入</button>
+        <button id="rst">重置</button>
+    </div>
+    <div id="info">点击下一步逐个插入：10→20→5→6→12→30→25</div>
+    <div id="tree"></div>
+</div>
+<script>
+const arr=[10,20,5,6,12,30,25];
+let ptr=0;
+let root=null;
+const info=document.getElementById('info');
+const tree=document.getElementById('tree');
+
+class BNode{
+    constructor(){this.keys=[];this.child=[];}
+}
+// 插入+分裂逻辑（3阶B树）
+function insertVal(node,val){
+    let pos=0;
+    while(pos<node.keys.length && val>node.keys[pos]) pos++;
+    if(node.child.length===0){//叶子
+        node.keys.splice(pos,0,val);
+        return node;
+    }
+    //找子节点递归插入
+    const sub=insertVal(node.child[pos],val);
+    if(sub.keys.length>2){//子节点满2，分裂
+        const mid=sub.keys[1];
+        const newNd=new BNode();
+        newNd.keys=[sub.keys[2]];
+        sub.keys=[sub.keys[0]];
+        newNd.child=sub.child.splice(2);
+        node.keys.splice(pos,0,mid);
+        node.child.splice(pos+1,0,newNd);
+    }
+    return node;
+}
+function insert(root,val){
+    if(!root){root=new BNode();root.keys=[val];return root;}
+    root=insertVal(root,val);
+    if(root.keys.length>2){//根分裂
+        const mid=root.keys[1];
+        const l=new BNode(),r=new BNode();
+        l.keys=[root.keys[0]];
+        r.keys=[root.keys[2]];
+        l.child=root.child.slice(0,2);
+        r.child=root.child.slice(2);
+        const newRoot=new BNode();
+        newRoot.keys=[mid];
+        newRoot.child=[l,r];
+        return newRoot;
+    }
+    return root;
+}
+//绘制
+function draw(rootDom){
+    tree.innerHTML='';
+    if(!rootDom)return;
+    const baseX=tree.clientWidth/2;
+    const h=90,off=baseX/2.2;
+    let q=[{n:rootDom,x:baseX,y:20,off:off}];
+    while(q.length){
+        let cur=q.shift(),n=cur.n,x=cur.x,y=cur.y,o=cur.off;
+        let nd=document.createElement('div');
+        nd.className='node';
+        nd.innerText=n.keys.join(',');
+        nd.style.left=(x-nd.offsetWidth/2)+'px';
+        nd.style.top=y+'px';
+        tree.appendChild(nd);
+        let ny=y+h,no=o/2;
+        for(let i=0;i<n.child.length;i++){
+            let cx=x-o+i*o*2;
+            drawLine(x,y+20,cx,ny,tree);
+            q.push({n:n.child[i],x:cx,y:ny,off:no})
+        }
+    }
+}
+function drawLine(x1,y1,x2,y2,p){
+    let l=document.createElement('div');
+    l.className='line';
+    let len=Math.hypot(x2-x1,y2-y1);
+    let ag=Math.atan2(y2-y1,x2-x1)*180/Math.PI;
+    l.style.width=len+'px';l.style.left=x1+'px';l.style.top=y1+'px';
+    l.style.transform=`rotate(${ag}deg)`;p.appendChild(l);
+}
+document.getElementById('next').onclick=()=>{
+    if(ptr>=arr.length){info.innerText='全部插入完成！最终B树：根[10,20]，叶子[5,6]、[12]、[25,30]';return;}
+    let v=arr[ptr];root=insert(root,v);info.innerText=`插入${v}`;draw(root);ptr++;
+}
+document.getElementById('rst').onclick=()=>{root=null;ptr=0;info.innerText='已重置';draw(root)}
+window.onresize=()=>draw(root);draw(root);
+</script>
+</body>
+</html>
