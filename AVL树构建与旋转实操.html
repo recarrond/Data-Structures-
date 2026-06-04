@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AVL树分步构建演示 [30,20,10,25,40,35,50]</title>
+    <style>
+        * {margin:0;padding:0;box-sizing:border-box;font-family:Microsoft Yahei}
+        body{background:#f3f7fc;padding:20px}
+        .wrap{max-width:1300px;margin:0 auto;background:#fff;padding:25px;border-radius:12px;box-shadow:0 2px 12px #d0d9e8}
+        h2{text-align:center;color:#2c3e50;margin-bottom:15px}
+        .ctrl{display:flex;gap:15px;justify-content:center;margin-bottom:20px}
+        button{padding:8px 22px;border:none;background:#3474eb;color:#fff;border-radius:6px;cursor:pointer;font-size:15px}
+        button:disabled{background:#b3c8f0;cursor:not-allowed}
+        .info{background:#f0f6ff;padding:12px;border-radius:8px;margin-bottom:15px;min-height:60px;color:#234}
+        #treeBox{position:relative;min-height:420px;border-top:1px solid #e0e7f3;padding-top:30px}
+        .node{position:absolute;width:56px;height:56px;border-radius:50%;background:#3474eb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;z-index:2;box-shadow:0 2px 6px #c1d4f7}
+        .line{position:absolute;height:2px;background:#667;transform-origin:left center;z-index:1}
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h2>AVL分步插入：[30,20,10,25,40,35,50]</h2>
+    <div class="ctrl">
+        <button id="next">下一步插入</button>
+        <button id="reset">重置整棵树</button>
+    </div>
+    <div class="info" id="info">点击【下一步】开始逐个插入节点</div>
+    <div id="treeBox"></div>
+</div>
+
+<script>
+// AVL节点
+class Node{
+    constructor(val){
+        this.val = val;
+        this.left = null;
+        this.right = null;
+        this.height = 1;
+    }
+}
+let root = null;
+const arr = [30,20,10,25,40,35,50];
+let idx = 0;
+const infoDom = document.getElementById('info');
+const treeDom = document.getElementById('treeBox');
+
+// 获取高度
+function getH(n){return n?n.height:0}
+// 平衡因子BF=左高-右高
+function getBF(n){return getH(n.left)-getH(n.right)}
+// 更新高度
+function updateH(n){n.height = 1+Math.max(getH(n.left),getH(n.right))}
+
+// 右旋 LL
+function rightRotate(y){
+    const x = y.left;
+    const t = x.right;
+    x.right = y;
+    y.left = t;
+    updateH(y);updateH(x);
+    return x;
+}
+// 左旋 RR
+function leftRotate(x){
+    const y = x.right;
+    const t = y.left;
+    y.left = x;
+    x.right = t;
+    updateH(x);updateH(y);
+    return y;
+}
+
+// AVL插入
+function insert(root,val,msgArr){
+    if(!root) return new Node(val);
+    if(val < root.val) root.left = insert(root.left,val,msgArr);
+    else if(val>root.val) root.right = insert(root.right,val,msgArr);
+    else return root;
+
+    updateH(root);
+    const bf = getBF(root);
+    // LL
+    if(bf>1 && val < root.left.val){
+        msgArr.push(`失衡【LL型】，旋转轴：${root.val}，执行单右旋`);
+        return rightRotate(root);
+    }
+    // RR
+    if(bf<-1 && val>root.right.val){
+        msgArr.push(`失衡【RR型】，旋转轴：${root.val}，执行单左旋`);
+        return leftRotate(root);
+    }
+    // LR
+    if(bf>1 && val>root.left.val){
+        msgArr.push(`失衡【LR型】，旋转轴：${root.val}，先左旋左孩子，再右旋`);
+        root.left = leftRotate(root.left);
+        return rightRotate(root);
+    }
+    // RL
+    if(bf<-1 && val<root.right.val){
+        msgArr.push(`失衡【RL型】，旋转轴：${root.val}，先右旋右孩子，再左旋`);
+        root.right = rightRotate(root.right);
+        return leftRotate(root);
+    }
+    return root;
+}
+
+// 绘制树
+function drawTree(root){
+    treeDom.innerHTML = '';
+    if(!root) return;
+    const baseX = treeDom.clientWidth/2;
+    const levelH = 110;
+    let offset = baseX/2.3;
+    const queue = [{n:root,x:baseX,y:20,off:offset}];
+    while(queue.length){
+        const cur = queue.shift();
+        const n = cur.n,x=cur.x,y=cur.y,off=cur.off;
+        // 节点文字：值(BF)
+        const bf = getBF(n);
+        const nd = document.createElement('div');
+        nd.className = 'node';
+        nd.innerText = `${n.val}(${bf})`;
+        nd.style.left = (x-28)+'px';
+        nd.style.top = y+'px';
+        treeDom.appendChild(nd);
+
+        const ny = y+levelH;
+        const noff = off/2;
+        // 左连线
+        if(n.left){
+            const lx = x-off;
+            drawLine(x,y+28,lx,ny+28,treeDom);
+            queue.push({n:n.left,x:lx,y:ny,off:noff})
+        }
+        // 右连线
+        if(n.right){
+            const rx = x+off;
+            drawLine(x,y+28,rx,ny+28,treeDom);
+            queue.push({n:n.right,x:rx,y:ny,off:noff})
+        }
+    }
+}
+// 画斜线
+function drawLine(x1,y1,x2,y2,p){
+    const line = document.createElement('div');
+    line.className = 'line';
+    const len = Math.hypot(x2-x1,y2-y1);
+    const ang = Math.atan2(y2-y1,x2-x1)*180/Math.PI;
+    line.style.width = len+'px';
+    line.style.left = x1+'px';
+    line.style.top = y1+'px';
+    line.style.transform = `rotate(${ang}deg)`;
+    p.appendChild(line);
+}
+
+// 按钮事件
+document.getElementById('next').onclick = ()=>{
+    if(idx>=arr.length){infoDom.innerText='全部插入完毕！最终中序：10,20,25,30,35,40,50';return}
+    const v = arr[idx];
+    const msg = [`插入元素：${v}`];
+    root = insert(root,v,msg);
+    infoDom.innerText = msg.join('\n');
+    drawTree(root);
+    idx++;
+}
+document.getElementById('reset').onclick = ()=>{
+    root=null;idx=0;infoDom.innerText='已重置，重新开始插入';
+    drawTree(root);
+}
+window.onresize = ()=>drawTree(root);
+drawTree(root);
+</script>
+</body>
+</html>
