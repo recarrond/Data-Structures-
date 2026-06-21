@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>无向图邻接矩阵与邻接表</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background-color: #161b26;
+            color: #f0f6fc;
+            padding: 40px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #58a6ff;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        h2 {
+            color: #79c0ff;
+            margin: 30px 0 16px;
+            font-size: 22px;
+            border-left: 4px solid #58a6ff;
+            padding-left: 12px;
+        }
+        .desc {
+            color: #adbac7;
+            font-size: 16px;
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        /* 邻接矩阵样式 */
+        .matrix-wrap {
+            background-color: #21262d;
+            padding: 24px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .matrix-table {
+            border-collapse: collapse;
+        }
+        .matrix-table td {
+            width: 48px;
+            height: 48px;
+            text-align: center;
+            font-size: 18px;
+            border: 1px solid #30363d;
+        }
+        .matrix-table .label {
+            background-color: #388bfd33;
+            font-weight: bold;
+            color: #79c0ff;
+        }
+        .matrix-table .zero {
+            color: #8b949e;
+        }
+        .matrix-table .one {
+            color: #58a6ff;
+            font-weight: bold;
+        }
+        /* 邻接表样式 */
+        .adj-list-box {
+            background-color: #21262d;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .adj-item {
+            font-size: 18px;
+            padding: 8px 0;
+            border-bottom: 1px solid #30363d;
+        }
+        .adj-item:last-child {
+            border-bottom: none;
+        }
+        .vertex-name {
+            color: #79c0ff;
+            font-weight: bold;
+            width: 60px;
+            display: inline-block;
+        }
+        .edge-list {
+            color: #f0f6fc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>6顶点无向图 — 邻接矩阵 & 邻接表</h1>
+        <p class="desc">顶点顺序约定：A(0)、B(1)、C(2)、D(3)、E(4)、F(5)</p>
+        <p class="desc">图中所有边：A-F、A-B、A-C、B-C、C-D、D-E、E-F、E-B</p>
+
+        <h2>一、邻接矩阵（6×6 对称矩阵）</h2>
+        <div class="matrix-wrap">
+            <table class="matrix-table">
+                <tr>
+                    <td class="label"></td>
+                    <td class="label">A</td>
+                    <td class="label">B</td>
+                    <td class="label">C</td>
+                    <td class="label">D</td>
+                    <td class="label">E</td>
+                    <td class="label">F</td>
+                </tr>
+                <tr>
+                    <td class="label">A</td>
+                    <td class="zero">0</td>
+                    <td class="one">1</td>
+                    <td class="one">1</td>
+                    <td class="zero">0</td>
+                    <td class="zero">0</td>
+                    <td class="one">1</td>
+                </tr>
+                <tr>
+                    <td class="label">B</td>
+                    <td class="one">1</td>
+                    <td class="zero">0</td>
+                    <td class="one">1</td>
+                    <td class="zero">0</td>
+                    <td class="one">1</td>
+                    <td class="zero">0</td>
+                </tr>
+                <tr>
+                    <td class="label">C</td>
+                    <td class="one">1</td>
+                    <td class="one">1</td>
+                    <td class="zero">0</td>
+                    <td class="one">1</td>
+                    <td class="zero">0</td>
+                    <td class="zero">0</td>
+                </tr>
+                <tr>
+                    <td class="label">D</td>
+                    <td class="zero">0</td>
+                    <td class="zero">0</td>
+                    <td class="one">1</td>
+                    <td class="zero">0</td>
+                    <td class="one">1</td>
+                    <td class="zero">0</td>
+                </tr>
+                <tr>
+                    <td class="label">E</td>
+                    <td class="zero">0</td>
+                    <td class="one">1</td>
+                    <td class="zero">0</td>
+                    <td class="one">1</td>
+                    <td class="zero">0</td>
+                    <td class="one">1</td>
+                </tr>
+                <tr>
+                    <td class="label">F</td>
+                    <td class="one">1</td>
+                    <td class="zero">0</td>
+                    <td class="zero">0</td>
+                    <td class="zero">0</td>
+                    <td class="one">1</td>
+                    <td class="zero">0</td>
+                </tr>
+            </table>
+        </div>
+
+        <h2>二、邻接表</h2>
+        <div class="adj-list-box">
+            <div class="adj-item">
+                <span class="vertex-name">A:</span>
+                <span class="edge-list">[ B, C, F ]</span>
+            </div>
+            <div class="adj-item">
+                <span class="vertex-name">B:</span>
+                <span class="edge-list">[ A, C, E ]</span>
+            </div>
+            <div class="adj-item">
+                <span class="vertex-name">C:</span>
+                <span class="edge-list">[ A, B, D ]</span>
+            </div>
+            <div class="adj-item">
+                <span class="vertex-name">D:</span>
+                <span class="edge-list">[ C, E ]</span>
+            </div>
+            <div class="adj-item">
+                <span class="vertex-name">E:</span>
+                <span class="edge-list">[ B, D, F ]</span>
+            </div>
+            <div class="adj-item">
+                <span class="vertex-name">F:</span>
+                <span class="edge-list">[ A, E ]</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
